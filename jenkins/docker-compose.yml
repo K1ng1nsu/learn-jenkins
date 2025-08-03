@@ -1,13 +1,16 @@
 version: '3.8'
 services:
   jenkins:
-    image: jenkins/jenkins:lts-jdk17
+    # image: jenkins/jenkins:lts-jdk17   -> chanage to docker file which install docker cli
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
     container_name: jenkins
     privileged: true
     user: root
     ports:
-      - '8080:8080'
-      # - "50000:50000" 분산 시스템일 때 에이전트 포트
+      - '8000:8080'
+      # - "50000:50000" if system is distributed
     volumes:
       - ./jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock

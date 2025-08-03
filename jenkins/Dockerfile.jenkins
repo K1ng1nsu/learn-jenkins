@@ -1,0 +1,40 @@
+# 기존 Jenkins 이미지 사용 (docker-compose.yml에 명시된 버전과 동일하게)
+FROM jenkins/jenkins:lts-jdk17
+
+# root 권한으로 전환하여 패키지 설치
+USER root
+
+# Docker CLI 설치를 위한 종속성 설치
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release && \
+    rm -rf /var/lib/apt/lists/*
+
+# Docker GPG 키 추가
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# Docker APT 리포지토리 추가
+RUN echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Docker CLI 설치
+RUN apt-get update && \
+    apt-get install -y docker-ce-cli
+
+# ===== 이 부분 추가 =====
+# 'docker' 그룹이 없으므로, 먼저 생성합니다.
+RUN groupadd docker
+# ========================
+
+# jenkins 유저에게 docker 그룹 권한 부여
+# 생성된 'docker' 그룹에 'jenkins' 사용자를 추가합니다.
+RUN usermod -aG docker jenkins
+
+# 컨테이너의 기본 실행 유저를 jenkins로 다시 설정
+USER jenkins
